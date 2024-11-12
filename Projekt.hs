@@ -2,13 +2,47 @@ module Main where
 
 import System.IO (readFile, writeFile)
 import Data.Char (isAlpha, toLower)
-import qualified Data.Set as Set
 
--- Funktion zum Tokenisieren des Textes: 
--- Entfernt nicht-alphabetische Zeichen und wandelt alles in Kleinbuchstaben um
+-- Farbcodierung für den Red-Black-Baum
+data Color = Red | Black deriving (Eq, Show)
+
+-- Der Red-Black-Baum: entweder leer oder ein Knoten mit Farbe, linkem und rechten Teilbaum, und einem Wert
+data RBTree a = Empty | Node Color (RBTree a) a (RBTree a) deriving (Show)
+
+-- Einfüge-Funktion für den Red-Black-Baum
+insert :: Ord a => a -> RBTree a -> RBTree a
+insert x t = blacken (insert' x t)
+  where
+    insert' :: Ord a => a -> RBTree a -> RBTree a
+    insert' x Empty = Node Red Empty x Empty
+    insert' x (Node color left value right)
+      | x < value = balance color (insert' x left) value right
+      | x > value = balance color left value (insert' x right)
+      | otherwise = Node color left value right
+
+    -- Balanciert den Baum nach der Einfügung
+    balance :: Color -> RBTree a -> a -> RBTree a -> RBTree a
+    balance Red (Node Red (Node Red a x b) y c) z d = Node Red (Node Black a x b) y (Node Black c z d)
+    balance Red (Node Red a x (Node Red b y c)) z d = Node Red (Node Black a x b) y (Node Black c z d)
+    balance Red a x (Node Red (Node Red b y c) z d) = Node Red (Node Black a x b) y (Node Black c z d)
+    balance Red a x (Node Red b y (Node Red c z d)) = Node Red (Node Black a x b) y (Node Black c z d)
+    balance color left value right = Node color left value right
+
+    -- Stellt sicher, dass der Baum nach der Einfügung schwarz bleibt
+    blacken :: RBTree a -> RBTree a
+    blacken (Node _ left value right) = Node Black left value right
+    blacken Empty = Empty
+
+-- Funktion zum Tokenisieren des Textes
 tokenize :: String -> [String]
 tokenize = words . map (\c -> if isAlpha c then toLower c else ' ')
 
+-- In-Order Traversierung des Red-Black-Baums (sortiert die Elemente)
+inOrderTraversal :: RBTree a -> [a]
+inOrderTraversal Empty = []
+inOrderTraversal (Node _ left value right) = inOrderTraversal left ++ [value] ++ inOrderTraversal right
+
+-- Hauptfunktion
 main = do
     -- Lies den Inhalt der Datei "war_and_peace.txt"
     content <- readFile "war_and_peace.txt"
@@ -16,10 +50,13 @@ main = do
     -- Tokenisiere den Inhalt
     let tokens = tokenize content
     
-    -- Entferne Duplikate, indem die Wörter in ein Set eingefügt werden
-    let uniqueWords = Set.toList (Set.fromList tokens)
+    -- Baue den Red-Black-Baum mit den einzigartigen Wörtern
+    let tree = foldr insert Empty tokens
     
-    -- Schreibe die eindeutigen Wörter in die Datei "output.txt", jeweils ein Wort pro Zeile
+    -- Traversiere den Baum in-order, um die Wörter in sortierter Reihenfolge zu erhalten
+    let uniqueWords = inOrderTraversal tree
+    
+    -- Schreibe die sortierten einzigartigen Wörter in die Datei "output.txt"
     writeFile "output.txt" (unlines uniqueWords)
     
-    putStrLn "Tokenization completed, unique words written to output.txt"
+    putStrLn "Tokenization and sorting completed, unique words written to output.txt"
