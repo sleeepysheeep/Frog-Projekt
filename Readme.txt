@@ -1,4 +1,6 @@
-Funktionale Programmierung Projekt: Red-Black Tree Textverarbeitung
+Funktionale Programmierung Projekt: Wörter sortieren mit Red-Black-Tree
+Maximilian Trostmann - if22b141
+Gisela Schaefer - if22b117
 ----------------------------------------
 Beschreibung:
 Dieses Projekt liest eine Textdatei (war_and_peace.txt), tokenisiert den Inhalt und speichert die einzigartigen Wörter in einem Red-Black-Baum. Anschließend werden die Wörter in sortierter Reihenfolge in eine Ausgabedatei (output.txt) geschrieben.
