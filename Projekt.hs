@@ -2,6 +2,7 @@ module Main where
 
 import System.IO (readFile, writeFile)
 import Data.Char (isAlpha, toLower)
+import Test.HUnit
 
 -- Farbcodierung für den Red-Black-Baum
 data Color = Red | Black deriving (Eq, Show)
@@ -43,6 +44,7 @@ inOrderTraversal Empty = []
 inOrderTraversal (Node _ left value right) = inOrderTraversal left ++ [value] ++ inOrderTraversal right
 
 -- Hauptfunktion
+main :: IO ()
 main = do
     -- Lies den Inhalt der Datei "war_and_peace.txt"
     content <- readFile "war_and_peace.txt"
@@ -51,7 +53,7 @@ main = do
     let tokens = tokenize content
     
     -- Baue den Red-Black-Baum mit den einzigartigen Wörtern
-    let tree = foldr insert Empty tokens
+    let tree = foldl insert Empty tokens  -- Verwendung von foldl statt foldr
     
     -- Traversiere den Baum in-order, um die Wörter in sortierter Reihenfolge zu erhalten
     let uniqueWords = inOrderTraversal tree
@@ -60,3 +62,15 @@ main = do
     writeFile "output.txt" (unlines uniqueWords)
     
     putStrLn "Tokenization and sorting completed, unique words written to output.txt"
+
+-- Test für die Funktion 'insert'
+testInsert :: Test
+testInsert = TestCase (assertEqual "Test, ob Einfügen von 10 funktioniert" (inOrderTraversal (insert 10 Empty)) [10])
+
+-- Test für die Funktion 'tokenize'
+testTokenize :: Test
+testTokenize = TestCase (assertEqual "Test, ob Tokenize funktioniert" (tokenize "Apple Banana") ["apple", "banana"])
+
+-- Testlauf starten
+main :: IO Counts
+main = runTestTT (TestList [testInsert, testTokenize])
